@@ -8,7 +8,7 @@ A valid vhost record can be added to your `/etc/hosts` file or inserted into a D
 # Install
 
 ```
-go install -v github.com/wdahlenburg/VhostFinder@latest
+go install -v github.com/whiskeykilo/VhostFinder@latest
 ```
 
 # Usage

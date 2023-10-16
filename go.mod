@@ -1,4 +1,4 @@
-module github.com/wdahlenburg/VhostFinder
+module github.com/whiskeykilo/VhostFinder
 
 go 1.16
 

@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/projectdiscovery/goflags"
-	"github.com/wdahlenburg/VhostFinder/utils"
+	"github.com/whiskeykilo/VhostFinder/utils"
 )
 
 type options struct {
