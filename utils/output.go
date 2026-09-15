@@ -84,7 +84,9 @@ func NewReporter(path, format string, silent, verbose bool) (*Reporter, error) {
 		return nil, fmt.Errorf("unknown output format %q (want one of %v)", format, OutputFormats)
 	}
 
-	f, err := os.Create(path)
+	// The path comes from -o: pointing this tool at a file of your choosing
+	// is the flag working as intended.
+	f, err := os.Create(path) //nolint:gosec // G304: operator-supplied output path
 	if err != nil {
 		return nil, fmt.Errorf("could not open output file: %w", err)
 	}
@@ -111,15 +113,15 @@ func (r *Reporter) Result(res Result) {
 	defer r.mu.Unlock()
 
 	if !r.silent {
-		fmt.Fprintf(r.stdout, "[+] [%s] [%s] [%d] [%d] %s\n",
+		_, _ = fmt.Fprintf(r.stdout, "[+] [%s] [%s] [%d] [%d] %s\n",
 			res.Host, res.Path, res.Status, res.ContentLength, res.Vhost)
 	} else {
-		fmt.Fprintln(r.stdout, res.Vhost)
+		_, _ = fmt.Fprintln(r.stdout, res.Vhost)
 	}
 
 	if r.file != nil {
 		if err := r.file.Write(res); err != nil {
-			fmt.Fprintf(r.stderr, "[!] Could not write result: %s\n", err)
+			_, _ = fmt.Fprintf(r.stderr, "[!] Could not write result: %s\n", err)
 		}
 	}
 }
@@ -131,7 +133,7 @@ func (r *Reporter) Info(format string, args ...any) {
 	}
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	fmt.Fprintf(r.stderr, "[!] "+format+"\n", args...)
+	_, _ = fmt.Fprintf(r.stderr, "[!] "+format+"\n", args...)
 }
 
 // Verbosef writes a message to stderr only in verbose mode.
@@ -141,7 +143,7 @@ func (r *Reporter) Verbosef(format string, args ...any) {
 	}
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	fmt.Fprintf(r.stderr, "[-] "+format+"\n", args...)
+	_, _ = fmt.Fprintf(r.stderr, "[-] "+format+"\n", args...)
 }
 
 // Warn writes a warning to stderr. Warnings are shown even in silent mode,
@@ -149,7 +151,7 @@ func (r *Reporter) Verbosef(format string, args ...any) {
 func (r *Reporter) Warn(format string, args ...any) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	fmt.Fprintf(r.stderr, "[!] "+format+"\n", args...)
+	_, _ = fmt.Fprintf(r.stderr, "[!] "+format+"\n", args...)
 }
 
 // Close flushes and closes the output file.
@@ -209,7 +211,7 @@ func (w *jsonWriter) Close() error {
 	enc := json.NewEncoder(w.f)
 	enc.SetIndent("", "  ")
 	if err := enc.Encode(w.results); err != nil {
-		w.f.Close()
+		_ = w.f.Close()
 		return err
 	}
 	return w.f.Close()
@@ -253,7 +255,7 @@ func (w *csvWriter) Write(r Result) error {
 func (w *csvWriter) Close() error {
 	w.w.Flush()
 	if err := w.w.Error(); err != nil {
-		w.f.Close()
+		_ = w.f.Close()
 		return err
 	}
 	return w.f.Close()

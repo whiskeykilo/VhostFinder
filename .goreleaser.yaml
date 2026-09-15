@@ -1,0 +1,69 @@
+version: 2
+
+builds:
+  - id: vhostfinder
+    main: .
+    binary: VhostFinder
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w -X main.version={{ .Version }} -X main.commit={{ .Commit }} -X main.date={{ .Date }}
+
+archives:
+  - id: vhostfinder
+    ids:
+      - vhostfinder
+    name_template: >-
+      {{ .Binary }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}
+    formats:
+      - tar.gz
+    format_overrides:
+      - goos: windows
+        formats:
+          - zip
+
+checksum:
+  name_template: "checksums.txt"
+
+changelog:
+  sort: asc
+  use: git
+  groups:
+    - title: "Features"
+      regexp: '^.*?feat(\(.+\))??!?:.+$'
+      order: 100
+    - title: "Bug fixes"
+      regexp: '^.*?fix(\(.+\))??!?:.+$'
+      order: 200
+    - title: "Performance improvements"
+      regexp: '^.*?perf(\(.+\))??!?:.+$'
+      order: 300
+    - title: "Refactors"
+      regexp: '^.*?refactor(\(.+\))??!?:.+$'
+      order: 400
+    - title: "Documentation"
+      regexp: '^.*?docs?(\(.+\))??!?:.+$'
+      order: 500
+    - title: "Other work"
+      order: 9999
+  filters:
+    exclude:
+      - "^test:"
+      - "^test\\("
+      - "^chore:"
+      - "^chore\\("
+      - "^ci:"
+      - "^ci\\("
+      - "^build:"
+      - "^build\\("
+      - "Merge pull request"
+      - "Merge branch"

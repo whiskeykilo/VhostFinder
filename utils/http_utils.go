@@ -215,7 +215,7 @@ func (f *Fuzzer) do(ctx context.Context, client *http.Client, req *http.Request)
 
 // readResult drains a response into a FuzzResult, capping the body.
 func (f *Fuzzer) readResult(resp *http.Response) (*FuzzResult, error) {
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	head, err := httputil.DumpResponse(resp, false)
 	if err != nil {
@@ -258,7 +258,8 @@ func (f *Fuzzer) FuzzHost(ctx context.Context, target Target, domain, path strin
 	req.Header = f.headers.Clone()
 	req.Host = domain
 
-	resp, err := f.do(ctx, f.clientFor(f.sniFor(target, domain)), req)
+	// readResult closes the body; bodyclose cannot follow it through the helper.
+	resp, err := f.do(ctx, f.clientFor(f.sniFor(target, domain)), req) //nolint:bodyclose
 	if err != nil {
 		return nil, err
 	}
@@ -293,7 +294,8 @@ func (f *Fuzzer) getPublic(ctx context.Context, domain, path string) (*FuzzResul
 	if f.Options.SNI == SNINone {
 		serverName = ""
 	}
-	resp, err := f.do(ctx, f.clientFor(serverName), req)
+	// readResult closes the body; bodyclose cannot follow it through the helper.
+	resp, err := f.do(ctx, f.clientFor(serverName), req) //nolint:bodyclose
 	if err != nil {
 		return nil, err
 	}

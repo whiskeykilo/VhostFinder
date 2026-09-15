@@ -103,7 +103,9 @@ func (d *Delay) Duration() time.Duration {
 	if d.max <= d.min {
 		return d.min
 	}
-	return d.min + rand.N(d.max-d.min)
+	// Jitter only has to be unpredictable to a rate limiter, not to an
+	// adversary, so the cheap generator is the right one.
+	return d.min + rand.N(d.max-d.min) //nolint:gosec // G404: jitter is not security-sensitive
 }
 
 // Sleep pauses for the next delay, returning early if ctx is cancelled.

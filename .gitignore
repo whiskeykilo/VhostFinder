@@ -1,2 +1,21 @@
-
+# macOS
 .DS_Store
+
+# Compiled binary
+/VhostFinder
+*.exe
+
+# Test / coverage artifacts
+*.test
+coverage.out
+coverage.html
+
+# goreleaser output
+dist/
+
+# Editor / IDE
+.idea/
+.vscode/
+
+# Dependency vendoring
+vendor/

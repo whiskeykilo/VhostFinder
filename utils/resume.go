@@ -34,17 +34,17 @@ func jobKey(target Target, path, domain string) string {
 func Fingerprint(opts *Options) string {
 	h := sha256.New()
 	for _, t := range opts.Targets {
-		fmt.Fprintf(h, "t:%s\n", t)
+		_, _ = fmt.Fprintf(h, "t:%s\n", t)
 	}
 	for _, p := range opts.Paths {
-		fmt.Fprintf(h, "p:%s\n", p)
+		_, _ = fmt.Fprintf(h, "p:%s\n", p)
 	}
 	for _, d := range opts.Domains {
-		fmt.Fprintf(h, "d:%s\n", d)
+		_, _ = fmt.Fprintf(h, "d:%s\n", d)
 	}
-	fmt.Fprintf(h, "w:%d\n", len(opts.Wordlist))
+	_, _ = fmt.Fprintf(h, "w:%d\n", len(opts.Wordlist))
 	for _, w := range opts.Wordlist {
-		fmt.Fprintf(h, "%s\n", w)
+		_, _ = fmt.Fprintf(h, "%s\n", w)
 	}
 	return hex.EncodeToString(h.Sum(nil))
 }
@@ -59,7 +59,9 @@ func OpenCheckpoint(path, fingerprint string) (*Checkpoint, error) {
 
 	done := make(map[string]struct{})
 
-	if existing, err := os.Open(path); err == nil {
+	// The path comes from -resume: reading the checkpoint the operator named
+	// is the flag working as intended.
+	if existing, err := os.Open(path); err == nil { //nolint:gosec // G304: operator-supplied checkpoint path
 		scanner := bufio.NewScanner(existing)
 		scanner.Buffer(make([]byte, 0, 64*1024), 1024*1024)
 		first := true
@@ -68,11 +70,11 @@ func OpenCheckpoint(path, fingerprint string) (*Checkpoint, error) {
 			if first {
 				first = false
 				if !strings.HasPrefix(line, checkpointHeader) {
-					existing.Close()
+					_ = existing.Close()
 					return nil, fmt.Errorf("%s is not a VhostFinder checkpoint", path)
 				}
 				if strings.TrimPrefix(line, checkpointHeader) != fingerprint {
-					existing.Close()
+					_ = existing.Close()
 					return nil, fmt.Errorf("checkpoint %s was written for a different scan; delete it or pass a new -resume path", path)
 				}
 				continue
@@ -82,7 +84,7 @@ func OpenCheckpoint(path, fingerprint string) (*Checkpoint, error) {
 			}
 		}
 		err := scanner.Err()
-		existing.Close()
+		_ = existing.Close()
 		if err != nil {
 			return nil, fmt.Errorf("could not read checkpoint: %w", err)
 		}
@@ -90,7 +92,7 @@ func OpenCheckpoint(path, fingerprint string) (*Checkpoint, error) {
 		return nil, fmt.Errorf("could not open checkpoint: %w", err)
 	}
 
-	f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o600)
+	f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o600) //nolint:gosec // G304: operator-supplied checkpoint path
 	if err != nil {
 		return nil, fmt.Errorf("could not open checkpoint for writing: %w", err)
 	}
@@ -98,7 +100,7 @@ func OpenCheckpoint(path, fingerprint string) (*Checkpoint, error) {
 	c := &Checkpoint{f: f, w: bufio.NewWriter(f), done: done}
 	if len(done) == 0 {
 		if _, err := c.w.WriteString(checkpointHeader + fingerprint + "\n"); err != nil {
-			f.Close()
+			_ = f.Close()
 			return nil, fmt.Errorf("could not write checkpoint header: %w", err)
 		}
 	}
@@ -146,7 +148,7 @@ func (c *Checkpoint) Close() error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if err := c.w.Flush(); err != nil {
-		c.f.Close()
+		_ = c.f.Close()
 		return err
 	}
 	return c.f.Close()
