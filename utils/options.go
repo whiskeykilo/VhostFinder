@@ -1,5 +1,7 @@
 package utils
 
+import "fmt"
+
 // Options is the full configuration for a run. It is populated by main from the
 // command line and treated as read-only once EnumerateVhosts starts.
 type Options struct {
@@ -50,4 +52,23 @@ type Options struct {
 	Silent       bool
 	Verbose      bool
 	Resume       string
+}
+
+// Validate checks the option combinations that would otherwise only fail once
+// the scan is already under way. Bad flags should be rejected before the first
+// request, not after a banner and an empty summary.
+func (o *Options) Validate() error {
+	if _, err := ParseHeaders(o.Headers); err != nil {
+		return err
+	}
+	if _, err := NewMatcher(o); err != nil {
+		return err
+	}
+	if _, err := ParseDelay(o.Delay); err != nil {
+		return err
+	}
+	if o.Output != "" && !ValidFormat(o.OutputFormat) {
+		return fmt.Errorf("unknown output format %q (want one of %v)", o.OutputFormat, OutputFormats)
+	}
+	return nil
 }

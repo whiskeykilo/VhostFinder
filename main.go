@@ -99,6 +99,10 @@ func run() error {
 		return err
 	}
 
+	if err := opts.Validate(); err != nil {
+		return err
+	}
+
 	reporter, err := utils.NewReporter(opts.Output, opts.OutputFormat, opts.Silent, opts.Verbose)
 	if err != nil {
 		return err
@@ -120,15 +124,19 @@ func run() error {
 	}
 
 	stats, err := utils.EnumerateVhosts(ctx, opts, reporter)
+
+	// A scan that never started has nothing to summarise; printing "0 requests"
+	// above the reason it failed reads as though the run succeeded.
+	if err != nil && !errors.Is(err, context.Canceled) {
+		return err
+	}
 	if stats != nil {
 		reporter.Info("%s", stats.Summary())
 	}
-
 	if errors.Is(err, context.Canceled) {
 		reporter.Warn("Interrupted")
-		return nil
 	}
-	return err
+	return nil
 }
 
 func parseFlags() (*options, *goflags.FlagSet, error) {
