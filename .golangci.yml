@@ -1,0 +1,33 @@
+version: "2"
+
+run:
+  timeout: 5m
+
+linters:
+  default: none
+  enable:
+    - govet
+    - errcheck
+    - staticcheck
+    - ineffassign
+    - unused
+    - misspell
+    - bodyclose
+    - gosec
+  settings:
+    gosec:
+      # G402 (TLS InsecureSkipVerify) is expected: VhostFinder is a vhost
+      # scanner that deliberately connects to arbitrary hosts, including
+      # ones presenting self-signed or otherwise unverifiable certificates
+      # (see utils/http_utils.go), so skipping TLS verification is required
+      # functionality rather than a bug.
+      excludes:
+        - G402
+  exclusions:
+    rules:
+      # Test files commonly ignore error returns on setup/teardown calls and
+      # use fixed/test-only values that gosec would otherwise flag.
+      - path: _test\.go
+        linters:
+          - errcheck
+          - gosec
