@@ -1,7 +1,11 @@
 name: CI
 
 on:
+  # Scoped to master: an unrestricted push trigger runs a second, identical
+  # build for every pull request opened from a branch in this repository.
   push:
+    branches:
+      - master
   pull_request:
 
 permissions:

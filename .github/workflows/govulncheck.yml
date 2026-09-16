@@ -21,9 +21,14 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Set up Go
+        # govulncheck is a tool, not part of the build: it is compiled here and
+        # then analyses the module's own go.mod. It must therefore run on a Go
+        # new enough to build itself, which is not the project's minimum --
+        # golang.org/x/vuln v1.8.0 already requires go 1.26, and setup-go pins
+        # GOTOOLCHAIN=local so Go will not fetch a newer one on its own.
         uses: actions/setup-go@v7
         with:
-          go-version-file: go.mod
+          go-version: stable
           cache: true
 
       - name: Run govulncheck
