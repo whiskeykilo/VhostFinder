@@ -4,6 +4,10 @@ on:
   push:
     branches:
       - master
+  # Also on pull requests: an advisory is cheaper to deal with before it
+  # lands than after, and it makes a change to this workflow verifiable
+  # without merging it first.
+  pull_request:
   schedule:
     # Weekly, off-peak UTC time (Monday 04:17 UTC).
     - cron: '17 4 * * 1'
